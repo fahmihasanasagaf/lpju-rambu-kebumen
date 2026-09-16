@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Histori;
 use App\Models\Rambu;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class RambuController extends Controller
 {
@@ -24,7 +26,7 @@ class RambuController extends Controller
             'alamat' => 'required|string|max:255',
             'latitude' => 'nullable|string',
             'longitude' => 'nullable|string',
-            'foto' => 'nullable|string',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'tahun_anggaran' => 'nullable|integer',
             'tanggal_diterima' => 'nullable|date',
             'tanggal_pasang' => 'nullable|date',
@@ -35,13 +37,26 @@ class RambuController extends Controller
 
         $rambu = Rambu::create($data);
 
-        return response()->json($rambu->load(['desa', 'sumberDana', 'petugas']), 201);
+        if ($request->hasFile('foto')) {
+        $data['foto'] = $request->file('foto')->store('foto/rambu', 'public');
+}       $rambu = Rambu::create($data);
+
+        return response()->json(
+            $rambu->load(['desa', 'sumberDana', 'petugas']),
+            201
+        );
     }
 
     public function show(string $id)
     {
         return response()->json(
-            Rambu::with(['desa', 'sumberDana', 'petugas', 'aduan', 'histori'])->findOrFail($id)
+            Rambu::with([
+                'desa',
+                'sumberDana',
+                'petugas',
+                'aduan',
+                'histori',
+            ])->findOrFail($id)
         );
     }
 
@@ -56,22 +71,59 @@ class RambuController extends Controller
             'alamat' => 'sometimes|string|max:255',
             'latitude' => 'nullable|string',
             'longitude' => 'nullable|string',
-            'foto' => 'nullable|string',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'tahun_anggaran' => 'nullable|integer',
             'tanggal_diterima' => 'nullable|date',
             'tanggal_pasang' => 'nullable|date',
-            'status' => 'nullable|string',
+            'status' => 'sometimes|string',
+            'keterangan_histori' => 'nullable|string|max:255',
         ]);
+
+        // Simpan status sebelum diperbarui.
+        $statusLama = $rambu->status;
+
+        // Field ini hanya digunakan untuk tabel histori.
+        $keteranganHistori = $data['keterangan_histori'] ?? null;
+        unset($data['keterangan_histori']);
 
         $rambu->update($data);
 
-        return response()->json($rambu->load(['desa', 'sumberDana', 'petugas']));
+        if ($request->hasFile('foto')) {
+    if ($rambu->foto) {
+        Storage::disk('public')->delete($rambu->foto);
+    }
+
+    $data['foto'] = $request->file('foto')->store('foto/rambu', 'public');
+} else {
+    unset($data['foto']);
+}
+
+$rambu->update($data);
+
+        // Buat histori hanya jika status berubah.
+        if ($statusLama !== $rambu->status) {
+            Histori::create([
+                'aset_type' => Rambu::class,
+                'aset_id' => $rambu->id,
+                'status_lama' => $statusLama,
+                'status_baru' => $rambu->status,
+                'keterangan' => $keteranganHistori,
+                'diubah_oleh' => $request->user()->id,
+                'tanggal' => now(),
+            ]);
+        }
+
+        return response()->json(
+            $rambu->load(['desa', 'sumberDana', 'petugas'])
+        );
     }
 
     public function destroy(string $id)
     {
         Rambu::findOrFail($id)->delete();
 
-        return response()->json(['message' => 'Data Rambu berhasil dihapus']);
+        return response()->json([
+            'message' => 'Data Rambu berhasil dihapus',
+        ]);
     }
 }
