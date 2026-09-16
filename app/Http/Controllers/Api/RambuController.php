@@ -37,15 +37,15 @@ class RambuController extends Controller
 
         $rambu = Rambu::create($data);
 
-        if ($request->hasFile('foto')) {
-        $data['foto'] = $request->file('foto')->store('foto/rambu', 'public');
-}       $rambu = Rambu::create($data);
+            if ($request->hasFile('foto')) {
+            $data['foto'] = $request->file('foto')->store('foto/rambu', 'public');
+    }       $rambu = Rambu::create($data);
 
-        return response()->json(
-            $rambu->load(['desa', 'sumberDana', 'petugas']),
-            201
-        );
-    }
+            return response()->json(
+                $rambu->load(['desa', 'sumberDana', 'petugas']),
+                201
+            );
+        }
 
     public function show(string $id)
     {
@@ -88,15 +88,15 @@ class RambuController extends Controller
 
         $rambu->update($data);
 
-        if ($request->hasFile('foto')) {
-    if ($rambu->foto) {
-        Storage::disk('public')->delete($rambu->foto);
-    }
+            if ($request->hasFile('foto')) {
+        if ($rambu->foto) {
+            Storage::disk('public')->delete($rambu->foto);
+        }
 
-    $data['foto'] = $request->file('foto')->store('foto/rambu', 'public');
-} else {
-    unset($data['foto']);
-}
+        $data['foto'] = $request->file('foto')->store('foto/rambu', 'public');
+    } else {
+        unset($data['foto']);
+    }
 
 $rambu->update($data);
 
