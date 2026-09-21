@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\KecamatanController;
 use App\Http\Controllers\Api\LpjuController;
 use App\Http\Controllers\Api\RambuController;
 use App\Http\Controllers\Api\SumberDanaController;
+use App\Http\Controllers\Api\UserManagementController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -69,6 +70,13 @@ Route::middleware(['auth:sanctum', 'role:admin,operator'])->group(function () {
 
     Route::apiResource('aduan', AduanController::class)
         ->only(['index', 'show', 'update']);
+});
+
+Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function () {
+    Route::get('/users', [UserManagementController::class, 'index']);
+    Route::post('/users', [UserManagementController::class, 'store']);
+    Route::put('/users/{id}', [UserManagementController::class, 'update']);
+    Route::delete('/users/{id}', [UserManagementController::class, 'destroy']);
 });
 
 /*

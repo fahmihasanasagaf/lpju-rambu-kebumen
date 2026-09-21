@@ -35,17 +35,17 @@ class RambuController extends Controller
 
         $data['petugas_id'] = $request->user()->id;
 
+        if ($request->hasFile('foto')) {
+            $data['foto'] = $request->file('foto')->store('foto/rambu', 'public');
+        }
+
         $rambu = Rambu::create($data);
 
-            if ($request->hasFile('foto')) {
-            $data['foto'] = $request->file('foto')->store('foto/rambu', 'public');
-    }       $rambu = Rambu::create($data);
-
-            return response()->json(
-                $rambu->load(['desa', 'sumberDana', 'petugas']),
-                201
-            );
-        }
+        return response()->json(
+            $rambu->load(['desa', 'sumberDana', 'petugas']),
+            201
+        );
+    }
 
     public function show(string $id)
     {

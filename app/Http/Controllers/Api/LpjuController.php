@@ -34,19 +34,17 @@ class LpjuController extends Controller
 
         $data['petugas_id'] = $request->user()->id;
 
+        if ($request->hasFile('foto')) {
+            $data['foto'] = $request->file('foto')->store('foto/lpju', 'public');
+        }
+
         $lpju = Lpju::create($data);
 
-            if ($request->hasFile('foto')) {
-            $data['foto'] = $request->file('foto')->store('foto/lpju', 'public');
+        return response()->json(
+            $lpju->load(['desa', 'sumberDana', 'petugas']),
+            201
+        );
     }
-
-            $lpju = Lpju::create($data);
-
-            return response()->json(
-                $lpju->load(['desa', 'sumberDana', 'petugas']),
-                201
-            );
-        }
 
     public function show(string $id)
     {

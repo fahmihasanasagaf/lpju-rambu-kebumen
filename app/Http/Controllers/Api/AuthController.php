@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -83,7 +84,17 @@ class AuthController extends Controller
 
         $result = $response->json();
 
+        Log::info('reCAPTCHA verification result', [
+            'success' => $result['success'] ?? false,
+            'hostname' => $result['hostname'] ?? null,
+            'error_codes' => $result['error-codes'] ?? [],
+        ]);
+
         if (! ($result['success'] ?? false)) {
+            Log::warning('reCAPTCHA verification failed', [
+                'error_codes' => $result['error-codes'] ?? [],
+                'hostname' => $result['hostname'] ?? null,
+            ]);
             throw ValidationException::withMessages([
                 'captcha_token' => ['Verifikasi captcha gagal, silakan coba lagi.'],
             ]);
