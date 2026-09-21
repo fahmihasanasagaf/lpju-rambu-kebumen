@@ -23,17 +23,17 @@
         </section>
         <section class="flex items-center justify-center bg-surface px-5 py-10 sm:px-8">
             <div class="w-full max-w-md" x-cloak>
-                <div class="mb-8 lg:hidden"><div class="flex items-center gap-3"><div class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-navy-900 text-sm font-bold text-teal-400"><img src="{{ asset('storage/foto/logo-kabupaten-kebumen.png') }}" alt="Logo Kabupaten Kebumen" class="h-full w-full object-contain p-1" onerror="this.remove(); this.parentElement.textContent='KB';"></div><div><p class="font-semibold text-navy-900">LPJU &amp; Rambu</p><p class="text-xs text-slate-500">Kabupaten Kebumen</p></div></div></div>
+                <div class="mb-8 lg:hidden"><div class="flex items-center gap-3"><div class="flex h-11 w-11 items-center justify-center rounded-xl bg-navy-900 text-sm font-bold text-teal-400">LR</div><div><p class="font-semibold text-navy-900">LPJU &amp; Rambu</p><p class="text-xs text-slate-500">Kabupaten Kebumen</p></div></div></div>
                 <div class="mb-8"><p class="text-sm font-semibold uppercase tracking-widest text-teal-600">Selamat datang</p><h2 class="mt-2 text-3xl font-semibold tracking-tight text-navy-900">Masuk ke panel kerja</h2><p class="mt-2 text-sm leading-6 text-slate-600">Gunakan akun Admin atau Operator yang telah terdaftar.</p></div>
                 <div class="mb-7 grid grid-cols-2 rounded-xl bg-slate-200/70 p-1" role="tablist" aria-label="Jenis akses">
                     <button type="button" @click="selectedRole = 'admin'" :class="selectedRole === 'admin' ? 'bg-white text-navy-900 shadow-sm' : 'text-slate-600'" class="min-h-11 rounded-lg px-4 text-sm font-semibold transition-colors" role="tab" :aria-selected="selectedRole === 'admin'">Admin</button>
                     <button type="button" @click="selectedRole = 'operator'" :class="selectedRole === 'operator' ? 'bg-white text-navy-900 shadow-sm' : 'text-slate-600'" class="min-h-11 rounded-lg px-4 text-sm font-semibold transition-colors" role="tab" :aria-selected="selectedRole === 'operator'">Operator</button>
                 </div>
                 <div x-show="error" role="alert" class="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700" x-text="error"></div>
-                <form @submit.prevent="submit" data-dashboard-url="/dashboard" novalidate>
+                <form @submit.prevent="submit" novalidate>
                     <div class="space-y-5">
-                        <div><label for="email" class="mb-2 block text-sm font-semibold text-navy-900">Email kerja</label><input id="email" name="email" type="email" x-model="email" @input="error = ''" autocomplete="email" required class="h-12 w-full rounded-xl border border-border bg-white px-4 text-sm text-navy-900 placeholder:text-slate-400" placeholder="nama@instansi.go.id"></div>
-                        <div><label for="password" class="mb-2 block text-sm font-semibold text-navy-900">Kata sandi</label><input id="password" name="password" type="password" x-model="password" @input="error = ''" autocomplete="current-password" required class="h-12 w-full rounded-xl border border-border bg-white px-4 text-sm text-navy-900 placeholder:text-slate-400" placeholder="Masukkan kata sandi"></div>
+                        <div><label for="email" class="mb-2 block text-sm font-semibold text-navy-900">Email kerja</label><input id="email" name="email" type="email" x-model="email" autocomplete="email" required class="h-12 w-full rounded-xl border border-border bg-white px-4 text-sm text-navy-900 placeholder:text-slate-400" placeholder="nama@instansi.go.id"></div>
+                        <div><label for="password" class="mb-2 block text-sm font-semibold text-navy-900">Kata sandi</label><input id="password" name="password" type="password" x-model="password" autocomplete="current-password" required class="h-12 w-full rounded-xl border border-border bg-white px-4 text-sm text-navy-900 placeholder:text-slate-400" placeholder="Masukkan kata sandi"></div>
                     </div>
                     <input type="hidden" name="captcha_token" x-model="captchaToken">
                     <div class="mt-5 flex justify-center"><div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}" data-callback="onRecaptchaVerified" data-expired-callback="onRecaptchaExpired" data-error-callback="onRecaptchaError"></div></div>
@@ -105,11 +105,8 @@
                 email: '', password: '', captchaToken: '', selectedRole: 'operator', loading: false, error: '',
                 async submit() {
                     this.loading = true; this.error = '';
-                    if (!String(this.email).trim()) { this.error = 'Email wajib diisi.'; this.loading = false; return; }
-                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(this.email).trim())) { this.error = 'Format email tidak valid.'; this.loading = false; return; }
-                    if (!String(this.password)) { this.error = 'Kata sandi wajib diisi.'; this.loading = false; return; }
                     try {
-                        const siteKey = document.querySelector('.g-recaptcha')?.dataset.sitekey || '';
+                        const siteKey = @js(config('services.recaptcha.site_key'));
                         if (!siteKey) throw new Error('reCAPTCHA belum dikonfigurasi. Isi RECAPTCHA_SITE_KEY terlebih dahulu.');
                         if (!window.grecaptcha) throw new Error('Layanan reCAPTCHA belum siap. Silakan coba lagi.');
                         this.captchaToken = String(window.grecaptcha.getResponse());
@@ -120,7 +117,7 @@
                             captcha_token: String(this.captchaToken),
                         });
                         Alpine.store('auth').setSession(response.data.user, response.data.token);
-                        window.location.href = document.querySelector('form')?.dataset.dashboardUrl || '/dashboard';
+                        window.location.href = '{{ route('dashboard') }}';
                     } catch (error) {
                         const data = error.response?.data;
                         this.error = data?.errors ? Object.values(data.errors).flat().join(' ') : (data?.message || error.message || 'Login gagal. Silakan coba lagi.');
