@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Histori;
 use App\Models\Rambu;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class RambuController extends Controller
@@ -24,8 +25,8 @@ class RambuController extends Controller
             'sumber_dana_id' => 'required|integer|exists:sumber_dana,id',
             'jenis_rambu' => 'required|string|max:255',
             'alamat' => 'required|string|max:255',
-            'latitude' => 'nullable|string',
-            'longitude' => 'nullable|string',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'tahun_anggaran' => 'nullable|integer',
             'tanggal_diterima' => 'nullable|date',
@@ -69,49 +70,44 @@ class RambuController extends Controller
             'sumber_dana_id' => 'sometimes|integer|exists:sumber_dana,id',
             'jenis_rambu' => 'sometimes|string|max:255',
             'alamat' => 'sometimes|string|max:255',
-            'latitude' => 'nullable|string',
-            'longitude' => 'nullable|string',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'tahun_anggaran' => 'nullable|integer',
             'tanggal_diterima' => 'nullable|date',
             'tanggal_pasang' => 'nullable|date',
-            'status' => 'sometimes|string',
+            'status' => 'sometimes|in:baik,rusak,perbaikan',
             'keterangan_histori' => 'nullable|string|max:255',
         ]);
 
-        // Simpan status sebelum diperbarui.
         $statusLama = $rambu->status;
-
-        // Field ini hanya digunakan untuk tabel histori.
         $keteranganHistori = $data['keterangan_histori'] ?? null;
         unset($data['keterangan_histori']);
 
-        $rambu->update($data);
-
+        DB::transaction(function () use ($request, $rambu, $data, $statusLama, $keteranganHistori) {
+            $oldFoto = $rambu->foto;
             if ($request->hasFile('foto')) {
-        if ($rambu->foto) {
-            Storage::disk('public')->delete($rambu->foto);
-        }
+                $data['foto'] = $request->file('foto')->store('foto/rambu', 'public');
+            }
 
-        $data['foto'] = $request->file('foto')->store('foto/rambu', 'public');
-    } else {
-        unset($data['foto']);
-    }
+            $rambu->update($data);
 
-$rambu->update($data);
+            if ($statusLama !== $rambu->status) {
+                Histori::create([
+                    'aset_type' => Rambu::class,
+                    'aset_id' => $rambu->id,
+                    'status_lama' => $statusLama,
+                    'status_baru' => $rambu->status,
+                    'keterangan' => $keteranganHistori,
+                    'diubah_oleh' => $request->user()->id,
+                    'tanggal' => now(),
+                ]);
+            }
 
-        // Buat histori hanya jika status berubah.
-        if ($statusLama !== $rambu->status) {
-            Histori::create([
-                'aset_type' => Rambu::class,
-                'aset_id' => $rambu->id,
-                'status_lama' => $statusLama,
-                'status_baru' => $rambu->status,
-                'keterangan' => $keteranganHistori,
-                'diubah_oleh' => $request->user()->id,
-                'tanggal' => now(),
-            ]);
-        }
+            if ($request->hasFile('foto') && $oldFoto) {
+                Storage::disk('public')->delete($oldFoto);
+            }
+        });
 
         return response()->json(
             $rambu->load(['desa', 'sumberDana', 'petugas'])

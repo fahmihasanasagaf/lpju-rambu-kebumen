@@ -22,11 +22,18 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::apiResource('kecamatan', KecamatanController::class);
-Route::apiResource('desa', DesaController::class);
+Route::middleware(['auth:sanctum', 'role:admin,operator'])->group(function () {
+    Route::apiResource('kecamatan', KecamatanController::class)->only(['index', 'show']);
+    Route::apiResource('desa', DesaController::class)->only(['index', 'show']);
+});
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    Route::apiResource('kecamatan', KecamatanController::class)->only(['store', 'update', 'destroy']);
+    Route::apiResource('desa', DesaController::class)->only(['store', 'update', 'destroy']);
+});
+
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:register');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
 
 Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware('auth:sanctum');
@@ -47,10 +54,13 @@ Route::apiResource('rambu', RambuController::class)
     ->only(['index', 'show']);
 
 Route::apiResource('aduan', AduanController::class)
-    ->only(['store']);
+    ->only(['store'])
+    ->middleware('throttle:aduan');
 
-Route::apiResource('histori', HistoriController::class)
-    ->only(['index', 'show']);
+Route::middleware(['auth:sanctum', 'role:admin,operator'])->group(function () {
+    Route::apiResource('histori', HistoriController::class)
+        ->only(['index', 'show']);
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -74,6 +84,7 @@ Route::middleware(['auth:sanctum', 'role:admin,operator'])->group(function () {
 
 Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/users', [UserManagementController::class, 'index']);
+    Route::get('/users/{id}', [UserManagementController::class, 'show']);
     Route::post('/users', [UserManagementController::class, 'store']);
     Route::put('/users/{id}', [UserManagementController::class, 'update']);
     Route::delete('/users/{id}', [UserManagementController::class, 'destroy']);

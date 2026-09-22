@@ -20,6 +20,11 @@ class UserManagementController extends Controller
         return response()->json(User::query()->latest()->get()->map(fn (User $user) => $this->output($user)));
     }
 
+    public function show(string $id)
+    {
+        return response()->json($this->output(User::findOrFail($id)));
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -41,6 +46,11 @@ class UserManagementController extends Controller
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'role' => ['sometimes', Rule::in(['admin', 'operator'])],
         ]);
+        if (isset($data['role']) && $user->role === 'admin' && $data['role'] === 'operator'
+            && User::where('role', 'admin')->count() === 1) {
+            return response()->json(['message' => 'Admin terakhir tidak dapat diturunkan menjadi operator.'], 422);
+        }
+
         if (!empty($data['password'])) $data['password'] = Hash::make($data['password']); else unset($data['password']);
         $user->update($data);
         return response()->json($this->output($user->fresh()));
@@ -48,8 +58,16 @@ class UserManagementController extends Controller
 
     public function destroy(Request $request, string $id)
     {
-        if ((int) $request->user()->id === (int) $id) return response()->json(['message' => 'Akun yang sedang digunakan tidak dapat dihapus.'], 422);
-        User::findOrFail($id)->delete();
+        if ((int) $request->user()->id === (int) $id) {
+            return response()->json(['message' => 'Akun yang sedang digunakan tidak dapat dihapus.'], 422);
+        }
+
+        $user = User::findOrFail($id);
+        if ($user->role === 'admin' && User::where('role', 'admin')->count() === 1) {
+            return response()->json(['message' => 'Admin terakhir tidak dapat dihapus.'], 422);
+        }
+
+        $user->delete();
         return response()->json(['message' => 'Pengguna berhasil dihapus.']);
     }
 }

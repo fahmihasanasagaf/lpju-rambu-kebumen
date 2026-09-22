@@ -24,12 +24,16 @@ class AduanController extends Controller
             'nama_pelapor' => 'required|string|max:255',
             'kontak_pelapor' => 'nullable|string|max:255',
             'deskripsi' => 'required|string',
-            'foto' => 'nullable|string',
-            'tanggal_aduan' => 'required|date',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'tanggal_aduan' => 'sometimes|date',
         ]);
 
         $modelClass = $data['jenis_aset'] === 'lpju' ? Lpju::class : Rambu::class;
         $modelClass::findOrFail($data['aset_id']);
+
+        $foto = $request->hasFile('foto')
+            ? $request->file('foto')->store('foto/aduan', 'public')
+            : null;
 
         $aduan = Aduan::create([
             'aset_type' => $modelClass,
@@ -37,9 +41,9 @@ class AduanController extends Controller
             'nama_pelapor' => $data['nama_pelapor'],
             'kontak_pelapor' => $data['kontak_pelapor'] ?? null,
             'deskripsi' => $data['deskripsi'],
-            'foto' => $data['foto'] ?? null,
+            'foto' => $foto,
             'status_aduan' => 'baru',
-            'tanggal_aduan' => $data['tanggal_aduan'],
+            'tanggal_aduan' => $data['tanggal_aduan'] ?? now(),
         ]);
 
         return response()->json($aduan->load('aset'), 201);

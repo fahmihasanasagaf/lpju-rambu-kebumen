@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Histori;
 use App\Models\Lpju;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class LpjuController extends Controller
@@ -23,8 +24,8 @@ class LpjuController extends Controller
             'desa_id' => 'required|integer|exists:desa,id',
             'sumber_dana_id' => 'required|integer|exists:sumber_dana,id',
             'alamat' => 'required|string|max:255',
-            'latitude' => 'nullable|string',
-            'longitude' => 'nullable|string',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'tahun_anggaran' => 'nullable|integer',
             'tanggal_diterima' => 'nullable|date',
@@ -67,49 +68,44 @@ class LpjuController extends Controller
             'desa_id' => 'sometimes|integer|exists:desa,id',
             'sumber_dana_id' => 'sometimes|integer|exists:sumber_dana,id',
             'alamat' => 'sometimes|string|max:255',
-            'latitude' => 'nullable|string',
-            'longitude' => 'nullable|string',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'tahun_anggaran' => 'nullable|integer',
             'tanggal_diterima' => 'nullable|date',
             'tanggal_pasang' => 'nullable|date',
-            'status' => 'sometimes|string',
+            'status' => 'sometimes|in:baik,rusak,perbaikan',
             'keterangan_histori' => 'nullable|string|max:255',
         ]);
 
-        // Simpan status sebelum diperbarui.
         $statusLama = $lpju->status;
-
-        // Ambil keterangan histori, tetapi jangan dimasukkan
-        // ke tabel lpju karena kolom ini hanya untuk tabel histori.
         $keteranganHistori = $data['keterangan_histori'] ?? null;
         unset($data['keterangan_histori']);
 
-        $lpju->update($data);
+        DB::transaction(function () use ($request, $lpju, $data, $statusLama, $keteranganHistori) {
+            $oldFoto = $lpju->foto;
+            if ($request->hasFile('foto')) {
+                $data['foto'] = $request->file('foto')->store('foto/lpju', 'public');
+            }
 
-        if ($request->hasFile('foto')) {
-        if ($lpju->foto) {
-            Storage::disk('public')->delete($lpju->foto);
-        }
+            $lpju->update($data);
 
-        $data['foto'] = $request->file('foto')->store('foto/lpju', 'public');
-    } else {
-        unset($data['foto']);
-    }
-    $lpju->update($data);
+            if ($statusLama !== $lpju->status) {
+                Histori::create([
+                    'aset_type' => Lpju::class,
+                    'aset_id' => $lpju->id,
+                    'status_lama' => $statusLama,
+                    'status_baru' => $lpju->status,
+                    'keterangan' => $keteranganHistori,
+                    'diubah_oleh' => $request->user()->id,
+                    'tanggal' => now(),
+                ]);
+            }
 
-        // Buat histori hanya jika status berubah.
-        if ($statusLama !== $lpju->status) {
-            Histori::create([
-                'aset_type' => Lpju::class,
-                'aset_id' => $lpju->id,
-                'status_lama' => $statusLama,
-                'status_baru' => $lpju->status,
-                'keterangan' => $keteranganHistori,
-                'diubah_oleh' => $request->user()->id,
-                'tanggal' => now(),
-            ]);
-        }
+            if ($request->hasFile('foto') && $oldFoto) {
+                Storage::disk('public')->delete($oldFoto);
+            }
+        });
 
         return response()->json(
             $lpju->load(['desa', 'sumberDana', 'petugas'])

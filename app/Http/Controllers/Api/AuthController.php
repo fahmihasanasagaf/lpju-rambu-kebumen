@@ -20,14 +20,13 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'nullable|in:admin,operator',
         ]);
 
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
-            'role' => $data['role'] ?? 'operator',
+            'role' => 'operator',
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -65,7 +64,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $request->user()->currentAccessToken()?->delete();
 
         return response()->json(['message' => 'Berhasil logout']);
     }

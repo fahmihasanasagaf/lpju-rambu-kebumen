@@ -5,6 +5,7 @@ import Alpine from 'alpinejs';
 
 window.axios = axios;
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+window.axios.defaults.headers.common['Accept'] = 'application/json';
 
 const TOKEN_KEY = 'lpju_auth_token';
 const USER_KEY = 'lpju_auth_user';
@@ -26,9 +27,24 @@ const clearAuth = () => {
 
 axios.interceptors.request.use((config) => {
     const token = readToken();
+    config.headers = config.headers || {};
+    config.headers.Accept = 'application/json';
+    console.log('[auth] token exists', Boolean(token));
+    console.log('[auth] token length', token?.length || 0);
+    console.log('[auth] request', config.url);
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
 });
+
+axios.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            console.warn('[auth] unauthorized response', { url: error.config?.url, origin: window.location.origin });
+        }
+        return Promise.reject(error);
+    },
+);
 
 Alpine.store('auth', {
     user: readUser(),
@@ -36,12 +52,23 @@ Alpine.store('auth', {
     get isAuthenticated() { return Boolean(this.token); },
     get role() { return this.user?.role ?? null; },
     setSession(user, token) {
+        const sessionToken = String(token || '').trim();
+        if (!sessionToken) throw new Error('Token login tidak diterima dari server.');
         this.user = user;
-        this.token = token;
+        this.token = sessionToken;
         try {
-            window.localStorage.setItem(TOKEN_KEY, token);
+            window.localStorage.setItem(TOKEN_KEY, sessionToken);
             window.localStorage.setItem(USER_KEY, JSON.stringify(user));
-        } catch { /* login remains active for this page */ }
+            const storedToken = window.localStorage.getItem(TOKEN_KEY);
+            console.log('[auth] session stored', { key: TOKEN_KEY, exists: Boolean(storedToken), length: storedToken?.length || 0, origin: window.location.origin });
+            if (storedToken !== sessionToken) throw new Error('Token login tidak dapat disimpan pada origin ini.');
+        } catch (error) {
+            this.user = null;
+            this.token = null;
+            clearAuth();
+            console.error('[auth] session storage failed', { key: TOKEN_KEY, origin: window.location.origin });
+            throw error;
+        }
     },
     async logout() {
         try {
