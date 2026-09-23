@@ -5,7 +5,7 @@
 @section('content')
 <div x-data="loginForm()">
     <div class="auth-form-header">
-        <span class="auth-form-mark">LR</span>
+        <span class="auth-form-mark"><img src="{{ asset('storage/foto/logo-dishub.jpg') }}" alt="Logo Dinas Perhubungan" onerror="this.remove(); this.parentElement.textContent='Dishub';"></span>
         <div>
             <h1 class="auth-form-title">Masuk ke panel kerja</h1>
             <p class="auth-form-description">Kelola aset penerangan dan rambu Kabupaten Kebumen.</p>

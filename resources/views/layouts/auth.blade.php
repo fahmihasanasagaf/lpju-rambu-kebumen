@@ -20,7 +20,6 @@
                 <span class="auth-brand__mark"><img src="{{ asset('storage/foto/logo-kabupaten-kebumen.png') }}" alt="Logo Kabupaten Kebumen" onerror="this.remove(); this.parentElement.textContent='KB';"></span>
                 <span><strong>LPJU &amp; Rambu</strong><small>Kabupaten Kebumen</small></span>
             </a>
-            <button id="login-map-focus" type="button" class="auth-map-button">Fokus aset</button>
         </div>
         <div class="auth-shell__legend" aria-hidden="true">
             <span><i class="auth-legend-dot auth-legend-dot--lpju"></i>LPJU</span>

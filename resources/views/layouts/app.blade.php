@@ -9,11 +9,11 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-surface">
-    <div class="min-h-screen bg-surface">
+    <div class="app-shell min-h-screen bg-surface">
         @include('partials.sidebar')
-        <div class="min-h-screen lg:pl-[var(--sidebar-width)]">
+        <div class="app-shell__content min-h-screen lg:pl-[var(--sidebar-width)]">
             @include('partials.header')
-            <main class="w-full px-4 py-8 pb-28 sm:px-6 lg:px-8 lg:pb-8">
+            <main class="app-shell__main w-full px-4 py-8 pb-28 sm:px-6 lg:px-8 lg:pb-8">
                 <div class="w-full max-w-none">
                     @yield('content')
                 </div>

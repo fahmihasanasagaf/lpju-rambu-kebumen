@@ -38,6 +38,7 @@ class QrCodeTest extends TestCase
             ->assertHeader('Content-Disposition', 'inline')
             ->assertSee('<svg', false)
             ->assertDontSee('<!DOCTYPE html>', false)
+            ->assertDontSee('Bearer', false)
             ->assertDontSee('Unauthenticated', false);
     }
 

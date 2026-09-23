@@ -33,4 +33,9 @@ class Aduan extends Model
     {
         return $this->belongsTo(User::class, 'ditindak_oleh');
     }
+
+    public function histories()
+    {
+        return $this->hasMany(AduanHistory::class)->latest();
+    }
 }

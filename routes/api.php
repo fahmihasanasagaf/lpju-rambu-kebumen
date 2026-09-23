@@ -69,6 +69,8 @@ Route::middleware(['auth:sanctum', 'role:admin,operator'])->group(function () {
 */
 
 Route::middleware(['auth:sanctum', 'role:admin,operator'])->group(function () {
+    Route::get('/aduan/summary', [AduanController::class, 'summary']);
+
     Route::apiResource('sumber-dana', SumberDanaController::class)
         ->only(['store', 'update']);
 

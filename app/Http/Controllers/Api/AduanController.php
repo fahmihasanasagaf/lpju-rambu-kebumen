@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Aduan;
+use App\Models\AduanHistory;
 use App\Models\Lpju;
 use App\Models\Rambu;
 use Illuminate\Http\Request;
@@ -77,17 +78,39 @@ class AduanController extends Controller
         return response()->json($aduan->load('aset'), 201);
     }
 
+    public function summary()
+    {
+        $total = Aduan::count();
+        $selesai = Aduan::where('status_aduan', 'selesai')->count();
+        return response()->json(['total' => $total, 'selesai' => $selesai, 'persentase_selesai' => $total ? (int) round(($selesai / $total) * 100) : 0]);
+    }
+
     public function show(string $id)
     {
-        return response()->json(Aduan::with(['aset', 'penindak'])->findOrFail($id));
+        return response()->json(Aduan::with(['aset', 'penindak', 'histories.pengubah'])->findOrFail($id));
     }
 
     public function update(Request $request, string $id)
     {
         $aduan = Aduan::findOrFail($id);
-        $data = $request->validate(['status_aduan' => ['required', Rule::in(['baru', 'diproses', 'selesai'])]]);
-        $aduan->update([...$data, 'ditindak_oleh' => $request->user()->id]);
-        return response()->json($aduan->load(['aset', 'penindak']));
+        $data = $request->validate([
+            'status_aduan' => ['required', Rule::in(['baru', 'diproses', 'selesai'])],
+            'keterangan' => ['nullable', 'string', 'max:2000'],
+        ]);
+        $statusLama = $aduan->status_aduan;
+        DB::transaction(function () use ($aduan, $data, $request, $statusLama) {
+            $aduan->update(['status_aduan' => $data['status_aduan'], 'ditindak_oleh' => $request->user()->id]);
+            if ($statusLama !== $aduan->status_aduan) {
+                AduanHistory::create([
+                    'aduan_id' => $aduan->id,
+                    'status_lama' => $statusLama,
+                    'status_baru' => $aduan->status_aduan,
+                    'keterangan' => $data['keterangan'] ?? null,
+                    'diubah_oleh' => $request->user()->id,
+                ]);
+            }
+        });
+        return response()->json($aduan->load(['aset', 'penindak', 'histories.pengubah']));
     }
 
     public function destroy(string $id)

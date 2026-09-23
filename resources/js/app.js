@@ -29,9 +29,6 @@ axios.interceptors.request.use((config) => {
     const token = readToken();
     config.headers = config.headers || {};
     config.headers.Accept = 'application/json';
-    console.log('[auth] token exists', Boolean(token));
-    console.log('[auth] token length', token?.length || 0);
-    console.log('[auth] request', config.url);
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
 });
@@ -60,7 +57,6 @@ Alpine.store('auth', {
             window.localStorage.setItem(TOKEN_KEY, sessionToken);
             window.localStorage.setItem(USER_KEY, JSON.stringify(user));
             const storedToken = window.localStorage.getItem(TOKEN_KEY);
-            console.log('[auth] session stored', { key: TOKEN_KEY, exists: Boolean(storedToken), length: storedToken?.length || 0, origin: window.location.origin });
             if (storedToken !== sessionToken) throw new Error('Token login tidak dapat disimpan pada origin ini.');
         } catch (error) {
             this.user = null;

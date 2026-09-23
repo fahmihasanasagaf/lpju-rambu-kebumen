@@ -5,7 +5,7 @@
 @section('content')
 <div x-data="registerForm()">
     <div class="auth-form-header">
-        <span class="auth-form-mark">LR</span>
+        <span class="auth-form-mark"><img src="{{ asset('storage/foto/logo-dishub.jpg') }}" alt="Logo Dinas Perhubungan" onerror="this.remove(); this.parentElement.textContent='Dishub';"></span>
         <div>
             <h1 class="auth-form-title">Daftar sebagai Operator</h1>
             <p class="auth-form-description">Buat akun untuk mengelola data aset di panel kerja.</p>

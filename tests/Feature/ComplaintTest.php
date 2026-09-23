@@ -90,6 +90,35 @@ class ComplaintTest extends TestCase
         $this->get('/aduan')->assertOk()->assertSee('Kirim aduan')->assertSee('complaint-map');
     }
 
+
+
+    public function test_complaint_summary_requires_auth_and_counts_all_statuses(): void
+    {
+        $asset = $this->asset();
+        foreach (['baru', 'selesai'] as $status) {
+            $this->postJson('/api/aduan', ['jenis_aset'=>'lpju','aset_id'=>$asset->id,'kategori_aduan'=>'lainnya','nama_pelapor'=>'Warga','alamat_kejadian'=>'Jalan','latitude'=>-7.6,'longitude'=>109.6,'deskripsi'=>'Keluhan']);
+        }
+        $this->getJson('/api/aduan/summary')->assertUnauthorized();
+        $operator = User::factory()->create(['role'=>'operator']);
+        $response = $this->actingAs($operator, 'sanctum')->getJson('/api/aduan/summary')->assertOk();
+        $response->assertJsonStructure(['total', 'selesai', 'persentase_selesai'])->assertJsonPath('total', 2)->assertJsonPath('selesai', 0)->assertJsonPath('persentase_selesai', 0);
+    }
+
+    public function test_status_changes_create_deduplicated_complaint_history(): void
+    {
+        $asset = $this->asset();
+        $id = $this->postJson('/api/aduan', ['jenis_aset'=>'lpju','aset_id'=>$asset->id,'kategori_aduan'=>'lainnya','nama_pelapor'=>'Warga','alamat_kejadian'=>'Jalan','latitude'=>-7.6,'longitude'=>109.6,'deskripsi'=>'Keluhan'])->json('id');
+        $operator = User::factory()->create(['role'=>'operator']);
+        $this->actingAs($operator, 'sanctum')->putJson("/api/aduan/$id", ['status_aduan'=>'diproses','keterangan'=>'Ditindak'])->assertOk();
+        $this->actingAs($operator, 'sanctum')->putJson("/api/aduan/$id", ['status_aduan'=>'diproses'])->assertOk();
+        $this->actingAs($operator, 'sanctum')->putJson("/api/aduan/$id", ['status_aduan'=>'selesai'])->assertOk();
+        $this->assertDatabaseCount('aduan_histories', 2);
+        $this->assertDatabaseHas('aduan_histories', ['aduan_id'=>$id,'status_lama'=>'baru','status_baru'=>'diproses','diubah_oleh'=>$operator->id]);
+        $this->actingAs($operator, 'sanctum')->getJson('/api/aduan/'.$id)->assertJsonCount(2, 'histories');
+        $this->actingAs($operator, 'sanctum')->getJson('/api/histori')->assertJsonFragment(['name' => $operator->name, 'role' => 'operator']);
+        $this->actingAs($operator, 'sanctum')->getJson('/api/histori?source=aduan')->assertOk()->assertJsonCount(2);
+    }
+
     private function asset(): Lpju
     {
         return Lpju::create([

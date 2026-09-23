@@ -20,6 +20,7 @@ Route::get('/assets/lpju/{id}/qr', [QrCodeController::class, 'lpju'])->name('ass
 Route::get('/assets/rambu/{id}/qr', [QrCodeController::class, 'rambu'])->name('assets.rambu.qr');
 Route::view('/assets/rambu', 'assets.rambu.index')->name('assets.rambu.index');
 Route::view('/assets/rambu/create', 'assets.rambu.create')->name('assets.rambu.create');
+Route::view('/assets/rambu/{id}/edit', 'assets.rambu.edit')->name('assets.rambu.edit');
 Route::view('/assets/rambu/{id}', 'assets.rambu.show')->name('assets.rambu.show');
 Route::view('/history', 'history.index')->name('history.index');
 Route::view('/users', 'users.index')->name('users.index');

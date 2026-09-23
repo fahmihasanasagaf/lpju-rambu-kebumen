@@ -14,14 +14,19 @@ class QrCodeController extends Controller
     {
         $asset = Lpju::findOrFail($id);
 
-        return $this->render(route('assets.lpju.show', $asset->id));
+        return $this->render(self::destinationUrl('lpju', $asset->id));
     }
 
     public function rambu(string $id): Response
     {
         $asset = Rambu::findOrFail($id);
 
-        return $this->render(route('assets.rambu.show', $asset->id));
+        return $this->render(self::destinationUrl('rambu', $asset->id));
+    }
+
+    public static function destinationUrl(string $type, int $id): string
+    {
+        return url('/aduan').'?'.http_build_query(['asset_type' => $type, 'asset_id' => $id]);
     }
 
     private function render(string $url): Response

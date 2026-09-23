@@ -58,7 +58,6 @@
                 ])), { padding: [28, 28], maxZoom: 14 });
             };
 
-            document.getElementById('login-map-focus')?.addEventListener('click', focusAssets);
             Promise.all([window.axios.get('/api/lpju'), window.axios.get('/api/rambu')])
                 .then(([lpju, rambu]) => {
                     showAssets(normalize(lpju), 'lpju', lpjuLayer);
