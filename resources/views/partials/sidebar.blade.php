@@ -1,8 +1,8 @@
 <div x-data="{ open: false }" @keydown.escape.window="open = false" @open-mobile-menu.window="open = true">
 <aside id="mobile-sidebar" class="fixed inset-y-0 left-0 z-[70] flex w-72 -translate-x-full flex-col bg-navy-900 text-white transition-transform duration-200 lg:translate-x-0" :class="{ 'translate-x-0': open }" aria-label="Navigasi utama">
     <div class="flex h-20 items-center gap-3 border-b border-white/10 px-6">
-        <div class="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-teal-500 text-lg font-bold text-navy-950">
-            <img src="{{ asset('storage/foto/logo-kabupaten-kebumen.png') }}" alt="Logo Kabupaten Kebumen" class="h-full w-full object-contain p-1" onerror="this.remove(); this.parentElement.textContent='KB';">
+        <div class="flex h-10 w-10 items-center justify-center overflow-hidden text-lg font-bold text-navy-950">
+            <img src="{{ asset('storage/foto/logo-kabupaten-kebumen.png') }}" alt="Logo Kabupaten Kebumen" class="h-full w-full object-contain" onerror="this.remove(); this.parentElement.textContent='KB';">
         </div>
         <div>
             <p class="font-semibold tracking-tight">LPJU &amp; Rambu</p>

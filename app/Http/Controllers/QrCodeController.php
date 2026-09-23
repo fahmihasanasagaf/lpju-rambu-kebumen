@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Lpju;
 use App\Models\Rambu;
-use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\{QRCode, QROptions};
+use chillerlan\QRCode\Output\QRMarkupSVG;
 use Illuminate\Http\Response;
 
 class QrCodeController extends Controller
@@ -25,7 +26,10 @@ class QrCodeController extends Controller
 
     private function render(string $url): Response
     {
-        $svg = (new QRCode)->render($url);
+        $options = new QROptions;
+        $options->outputInterface = QRMarkupSVG::class;
+        $options->outputBase64 = false;
+        $svg = (new QRCode($options))->render($url);
 
         return response($svg, 200, [
             'Content-Type' => 'image/svg+xml',
