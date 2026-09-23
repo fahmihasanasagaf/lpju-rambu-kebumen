@@ -35,6 +35,7 @@ class RambuController extends Controller
         ]);
 
         $data['petugas_id'] = $request->user()->id;
+        $data['qr_code'] = 'RAMBU-'.str_pad((string) ((Rambu::max('id') ?? 0) + 1), 4, '0', STR_PAD_LEFT);
 
         if ($request->hasFile('foto')) {
             $data['foto'] = $request->file('foto')->store('foto/rambu', 'public');

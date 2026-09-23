@@ -15,6 +15,7 @@ class Lpju extends Model
         'latitude',
         'longitude',
         'foto',
+        'qr_code',
         'tahun_anggaran',
         'tanggal_diterima',
         'tanggal_pasang',

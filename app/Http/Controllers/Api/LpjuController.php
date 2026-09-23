@@ -34,6 +34,7 @@ class LpjuController extends Controller
         ]);
 
         $data['petugas_id'] = $request->user()->id;
+        $data['qr_code'] = 'LPJU-'.str_pad((string) ((Lpju::max('id') ?? 0) + 1), 4, '0', STR_PAD_LEFT);
 
         if ($request->hasFile('foto')) {
             $data['foto'] = $request->file('foto')->store('foto/lpju', 'public');

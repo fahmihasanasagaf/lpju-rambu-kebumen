@@ -38,7 +38,8 @@
             <svg class="h-5 w-5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m7-8a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7-3v6m3-3h-6" /></svg>
             Pengguna
         </a>
-        <a href="#" class="flex min-h-11 items-center gap-3 rounded-lg border-l-4 border-transparent px-3 text-sm text-slate-300 transition-colors hover:bg-navy-800 hover:text-white">
+        <a x-show="['admin', 'operator'].includes($store.auth.role)" href="{{ route('complaints.index') }}" class="flex min-h-11 items-center gap-3 rounded-lg border-l-4 border-transparent px-3 text-sm text-slate-300 transition-colors hover:bg-navy-800 hover:text-white"><span aria-hidden="true">!</span>Aduan</a>
+        <a href="{{ route('history.index') }}" class="flex min-h-11 items-center gap-3 rounded-lg border-l-4 border-transparent px-3 text-sm text-slate-300 transition-colors hover:bg-navy-800 hover:text-white">
             <svg class="h-5 w-5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6v6l4 2m5-2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
             Histori perubahan
         </a>
